@@ -1,12 +1,14 @@
+import threading
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo
 from PyQt5.QtCore import QIODevice
 from pyqtgraph import PlotWidget
 
-serial = QSerialPort()
-serial.setBaudRate(9600)
+serial = QSerialPort()#инициализауия com
+serial.setBaudRate(9600)#инициализауия com
 portList = []
-ports = QSerialPortInfo().availablePorts()
+ports = QSerialPortInfo().availablePorts() #список доспутных портов
 for port in ports:
     portList.append(port.portName())
 
@@ -82,15 +84,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def opnet_serial(self):
-        serial.setPortName(self.com_list.currentText())
-        serial.open(QIODevice.ReadWrite)
-
+        serial.setPortName(self.com_list.currentText()) #установить имя порта из списка выбранного значения com_list
+        serial.open(QIODevice.ReadWrite) #открыть порт для чтения/записи
         self.serial_ready_read()
-        self.buttonOk.setEnabled(False)
-        self.buttonCancel.setEnabled(True)
+        self.buttonOk.setEnabled(False)#кнопки Ok Cancle
+        self.buttonCancel.setEnabled(True)#кнопки Ok Cancle
 
 
-    def onRead(self):
+    def onRead(self):# переписать на чтение в другом потоке
         rx = serial.readLine()
         string_rx = str(rx, "UTF-8").strip()
         if (string_rx != 'Empty' and string_rx != 'Fail'):
@@ -99,7 +100,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.plot_graph(val=string_rx)
                 self.lcd.display(string_rx)
 
-    def onClose(self):
+    def onClose(self):# нужна ли вообще данная функция
         serial.close()
 
     def plot_graph(self,val):
