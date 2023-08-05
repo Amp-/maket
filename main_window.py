@@ -1,3 +1,5 @@
+import random
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo
 from PyQt5.QtCore import QIODevice
@@ -7,18 +9,20 @@ import time
 
 open_list = []
 close_list = []
-status = 0
-serial = QSerialPort()
-serial.setBaudRate(9600)
 portList = []
+status = 0
+count = 0
+stop = 0
+baudrate = 9600
+serial = QSerialPort()
+serial.setBaudRate(baudrate)
 ports = QSerialPortInfo().availablePorts()
 for port in ports:
     portList.append(port.portName())
 
 cor_x = list(range(100))
 cor_y = [0] * 100
-count = 0
-stop = 0
+
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -76,7 +80,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         font.setPointSize(10)
         self.checkBox_door_status.setFont(font)
         self.checkBox_door_status.setObjectName("checkBox_door_status")
-        self.checkBox_door_status.clicked.connect(self.measurement)
+        self.checkBox_door_status.clicked.connect(self.checkbox_state_control)
         self.graph = PlotWidget(self.centralwidget)
         self.graph.setGeometry(QtCore.QRect(10, 190, 641, 381))
         self.graph.setObjectName("graph")
@@ -101,18 +105,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.buttonOk.setEnabled(False)
         self.buttonCancel.setEnabled(True)
 
-    def calc(self):
+    def measurement(self):#рассчет экранировки
         global stop
         print(f'Открытая дверь {len(open_list)}')
         print(f'Закрытая дверь {len(close_list)}')
-        if len(open_list) == 9 and len(close_list)==9:
-            cl = [int(x) for x in close_list]
-            ol = [int(x) for x in open_list]
-            result = sum(cl) - sum(ol)
-            if result > 0:
+        if len(open_list) == 10 and len(close_list)==10:
+            close_list_int = [int(x) for x in close_list] #преобразование списка str->int
+            open_list_int = [int(x) for x in open_list]
+            random_close_list = random.sample(close_list_int,5)#выбираем 5 случайных чисел из списка
+            random_open_list = random.sample(open_list_int, 5)
+            close_list_for = sum(random_close_list)/len(random_close_list)#считаем среднее арифмитическое пяти случаных чисел
+            open_list_for = sum(random_open_list) / len(random_open_list)
+            result = close_list_for - open_list_for #считаем разницу
+            if result > 0:#bизменить значение на знаение из стоек
                 stop = 1
                 self.label_color.setStyleSheet("background-color: green;")
                 self.label_color.setText("Allowed")
+            else:
+                stop = 1
+                print(f'Экранировка нарушена')
+
             print(f'Результат{result}')
 
 
@@ -120,21 +132,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         rx = serial.readLine()
         string_rx = str(rx, "UTF-8").strip()
         if (string_rx != 'Empty' and string_rx != 'Fail'):
-            if (len(string_rx)) < 5:
-                # self.change_color(string_rx)
-                self.plot_graph(val=string_rx)
-                self.lcd.display(string_rx)
-                if stop == 0:
-                    self.calc()
-                    if status == 0:
-                        open_list.append(string_rx)
-                        if len(open_list) ==10:
-                            open_list.pop(0)
-                    if status == 1:
-                        close_list.append(string_rx)
-                        if len(close_list) ==10:
-                            close_list.pop(0)
+            if (len(string_rx)) < 5 and stop == 0:
+                    self.add_data_in_list(string_rx)
 
+    def add_data_in_list(self,data):
+        self.lcd.display(data)
+        self.plot_graph(val=data)
+        self.measurement()
+        if status == 0:
+            open_list.append(data)
+            if len(open_list) == 11:
+                open_list.pop(0)
+        if status == 1:
+            close_list.append(data)
+            if len(close_list) == 11:
+                close_list.pop(0)
     def onClose(self):
         serial.close()
 
@@ -148,30 +160,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         if serial.isOpen():
             serial.readyRead.connect(lambda : self.onRead())
 
-    def change_color(self,t):
-        if (t != 'Empty' and t != 'Fail'):
-            if(int(t)==632):
-                self.label_color.setStyleSheet("background-color: green;")
-                self.label_color.setText("Allowed")
-
-            if(int(t)==634):
-                self.label_color.setStyleSheet("background-color: red;")
-                self.label_color.setText("Denied")
-
-    def measurement(self):
+    def checkbox_state_control(self):
         global status, stop
         if self.checkBox_door_status.isChecked():
             self.checkBox_door_status.setText("Открыть дверь")
             close_list.clear()
             status = 1
-            stop = 0
-            self.label_color.setStyleSheet("background-color: red;")
-            self.label_color.setText("Denied")
         else:
             self.checkBox_door_status.setText("Закрыть дверь")
             open_list.clear()
             close_list.clear()
             status = 0
+            stop = 0
+            self.label_color.setStyleSheet("background-color: red;")
+            self.label_color.setText("Denied")
 
 
 
