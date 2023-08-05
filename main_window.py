@@ -2,7 +2,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo
 from PyQt5.QtCore import QIODevice
 from pyqtgraph import PlotWidget
+import time
 
+
+open_list = []
+close_list = []
+status = 0
 serial = QSerialPort()
 serial.setBaudRate(9600)
 portList = []
@@ -13,6 +18,7 @@ for port in ports:
 cor_x = list(range(100))
 cor_y = [0] * 100
 count = 0
+stop = 0
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -63,6 +69,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.label_color.setObjectName("label_color")
         self.verticalLayout_2.addWidget(self.label_color)
         self.label_color.setStyleSheet("background-color: red;")
+        self.label_color.setText("Denied")
+        self.checkBox_door_status = QtWidgets.QCheckBox(self.groupBox)
+        self.checkBox_door_status.setGeometry(QtCore.QRect(290, 74, 151, 20))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.checkBox_door_status.setFont(font)
+        self.checkBox_door_status.setObjectName("checkBox_door_status")
+        self.checkBox_door_status.clicked.connect(self.measurement)
         self.graph = PlotWidget(self.centralwidget)
         self.graph.setGeometry(QtCore.QRect(10, 190, 641, 381))
         self.graph.setObjectName("graph")
@@ -77,8 +91,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         MainWindow.setStatusBar(self.statusbar)
         self.retranslateUi(MainWindow)
 
-
-
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def opnet_serial(self):
@@ -89,15 +101,39 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.buttonOk.setEnabled(False)
         self.buttonCancel.setEnabled(True)
 
+    def calc(self):
+        global stop
+        print(f'Открытая дверь {len(open_list)}')
+        print(f'Закрытая дверь {len(close_list)}')
+        if len(open_list) == 9 and len(close_list)==9:
+            cl = [int(x) for x in close_list]
+            ol = [int(x) for x in open_list]
+            result = sum(cl) - sum(ol)
+            if result > 0:
+                stop = 1
+                self.label_color.setStyleSheet("background-color: green;")
+                self.label_color.setText("Allowed")
+            print(f'Результат{result}')
+
 
     def onRead(self):
         rx = serial.readLine()
         string_rx = str(rx, "UTF-8").strip()
         if (string_rx != 'Empty' and string_rx != 'Fail'):
             if (len(string_rx)) < 5:
-                self.change_color(string_rx)
+                # self.change_color(string_rx)
                 self.plot_graph(val=string_rx)
                 self.lcd.display(string_rx)
+                if stop == 0:
+                    self.calc()
+                    if status == 0:
+                        open_list.append(string_rx)
+                        if len(open_list) ==10:
+                            open_list.pop(0)
+                    if status == 1:
+                        close_list.append(string_rx)
+                        if len(close_list) ==10:
+                            close_list.pop(0)
 
     def onClose(self):
         serial.close()
@@ -117,12 +153,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             if(int(t)==632):
                 self.label_color.setStyleSheet("background-color: green;")
                 self.label_color.setText("Allowed")
+
             if(int(t)==634):
                 self.label_color.setStyleSheet("background-color: red;")
                 self.label_color.setText("Denied")
 
     def measurement(self):
-        pass
+        global status, stop
+        if self.checkBox_door_status.isChecked():
+            self.checkBox_door_status.setText("Открыть дверь")
+            close_list.clear()
+            status = 1
+            stop = 0
+            self.label_color.setStyleSheet("background-color: red;")
+            self.label_color.setText("Denied")
+        else:
+            self.checkBox_door_status.setText("Закрыть дверь")
+            open_list.clear()
+            close_list.clear()
+            status = 0
+
 
 
     def retranslateUi(self, MainWindow):
@@ -133,7 +183,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.buttonCancel.setText(_translate("MainWindow", "Cancel"))
         self.label_delay.setText(_translate("MainWindow", "Уровень"))
         self.label_status.setText(_translate("MainWindow", "Статус"))
-
+        self.checkBox_door_status.setText(_translate("MainWindow", "Закрыть дверь"))
 
 
 

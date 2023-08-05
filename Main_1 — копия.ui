@@ -62,7 +62,7 @@
       <string>Cancel</string>
      </property>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="">
      <property name="geometry">
       <rect>
        <x>16</x>
@@ -88,7 +88,7 @@
       </item>
      </layout>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="">
      <property name="geometry">
       <rect>
        <x>149</x>
@@ -117,24 +117,6 @@
       </item>
      </layout>
     </widget>
-    <widget class="QCheckBox" name="checkBox_door_status">
-     <property name="geometry">
-      <rect>
-       <x>290</x>
-       <y>74</y>
-       <width>151</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Закрыть дверь</string>
-     </property>
-    </widget>
    </widget>
    <widget class="PlotWidget" name="graph" native="true">
     <property name="geometry">
@@ -153,7 +135,7 @@
      <x>0</x>
      <y>0</y>
      <width>682</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
