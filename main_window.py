@@ -4,8 +4,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo
 from PyQt5.QtCore import QIODevice
 from pyqtgraph import PlotWidget
-import time
-
 
 open_list = []
 close_list = []
@@ -26,7 +24,8 @@ cor_y = [0] * 100
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(682, 660)
+        MainWindow.resize(682, 600)
+        MainWindow.setFixedSize(682, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
@@ -100,8 +99,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def opnet_serial(self):
         serial.setPortName(self.com_list.currentText())
         serial.open(QIODevice.ReadWrite)
-
-        self.serial_ready_read()
         self.buttonOk.setEnabled(False)
         self.buttonCancel.setEnabled(True)
 
@@ -157,7 +154,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.graph.clear()
         self.graph.plot(cor_x, cor_y,pen='blue')
     def serial_ready_read(self):
-        if serial.isOpen():
             serial.readyRead.connect(lambda : self.onRead())
 
     def checkbox_state_control(self):
@@ -186,7 +182,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.label_delay.setText(_translate("MainWindow", "Уровень"))
         self.label_status.setText(_translate("MainWindow", "Статус"))
         self.checkBox_door_status.setText(_translate("MainWindow", "Закрыть дверь"))
-
+        # serial.readyRead.connect(lambda: self.onRead())
+        self.serial_ready_read()
 
 
 
