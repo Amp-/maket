@@ -46,7 +46,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Ok</string>
+      <string>Connect</string>
      </property>
     </widget>
     <widget class="QPushButton" name="buttonCancel">
@@ -111,7 +111,7 @@
          <enum>QFrame::Box</enum>
         </property>
         <property name="text">
-         <string/>
+         <string>Denied</string>
         </property>
        </widget>
       </item>
@@ -153,7 +153,7 @@
      <x>0</x>
      <y>0</y>
      <width>682</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
